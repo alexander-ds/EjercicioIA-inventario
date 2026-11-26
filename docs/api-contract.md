@@ -56,6 +56,9 @@ Base URL por defecto: `http://localhost:8080`.
 Implementaciones: `inventory-service` (Spring Boot) o `inventory-service-go` (Go).
 **Solo una activa a la vez.** Toda petición excepto `/health` requiere JWT válido.
 
+La implementación Go publica además su especificación OpenAPI en
+`GET /openapi.json` y Swagger UI en `GET /docs` (ambas públicas).
+
 ### 3.1 Respuestas de error
 
 ```json
@@ -162,6 +165,62 @@ Tipos de movimiento: `ENTRY`, `EXIT`, `ADJUSTMENT`, `TRANSFER`.
 Estados de transferencia: `PENDING`, `SENT`, `RECEIVED`, `CANCELLED`.
 `user_id` se obtiene del claim `sub` del JWT y se persiste como referencia
 lógica a `auth_db.users.id` (sin foreign key entre bases).
+
+Payload de movimiento:
+
+```json
+{
+  "productId": "uuid",
+  "warehouseId": "uuid",
+  "type": "ENTRY",
+  "quantity": 10,
+  "reference": "OC-001",
+  "observation": "Compra"
+}
+```
+
+`POST /api/movements` modifica el stock en la misma transacción: `ENTRY` suma,
+`EXIT` y `TRANSFER` descuentan, `ADJUSTMENT` fija la cantidad. Un descuento sin
+stock suficiente responde `409`.
+
+Payload de transferencia:
+
+```json
+{
+  "originWarehouseId": "uuid",
+  "destinationWarehouseId": "uuid",
+  "observation": "Traslado entre almacenes",
+  "details": [
+    { "productId": "uuid", "quantity": 5 }
+  ]
+}
+```
+
+`POST /api/transfers` crea la transferencia en `PENDING`. Valida que los
+almacenes sean distintos, que no se repita `productId` en `details` y que haya
+stock suficiente en el origen. El contrato actual no incluye un endpoint para
+cambiar el estado, por lo que la creación no modifica el stock.
+
+### 3.7 Payloads de catálogos e inventario
+
+```json
+// POST /api/warehouses
+{ "code": "WH-003", "name": "Sur", "description": "...", "address": "...", "active": true }
+
+// POST /api/categories
+{ "name": "Teclados", "description": "...", "active": true }
+
+// POST /api/suppliers
+{ "name": "Proveedor", "identification": "900...", "phone": "...", "email": "...", "address": "...", "active": true }
+```
+
+`active` es opcional y por defecto `true`. `GET /api/inventory` acepta el filtro
+opcional `warehouseId=<uuid>`; `PUT /api/inventory/{productId}/{warehouseId}`
+usa:
+
+```json
+{ "quantity": 50, "minimumStock": 10, "maximumStock": 100 }
+```
 
 ## 4. Compatibilidad entre implementaciones
 
