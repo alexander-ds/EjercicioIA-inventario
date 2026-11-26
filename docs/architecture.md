@@ -6,7 +6,7 @@ Este documento describe la arquitectura general del sistema y las responsabilida
 
 ## 2. Componentes
 
-> Nota terminológica: dónde se diga `backend` se refiere a `inventory-service`; dónde se diga `frontend` se refiere a `inventory-front`.
+> Nota terminológica: dónde se diga `backend` se refiere al servicio de inventario activo (`inventory-service` o `inventory-service-go`); dónde se diga `frontend` se refiere a `inventory-front`.
 
 ### inventory-front
 
@@ -56,6 +56,23 @@ Responsabilidad:
 * Autorización.
 * Validación de JWT.
 
+### inventory-service-go
+
+Tecnología:
+
+```text
+Go
+net/http
+PostgreSQL
+```
+
+Ubicación: módulo `inventory-service-go/` de este repositorio.
+
+Responsabilidad: la misma que `inventory-service`. Es una **implementación
+alternativa**, no un servicio adicional: solo una de las dos está activa contra
+`inventory_db`. Ver `docs/decisions/ADR-002-inventory-service-go.md` y
+`docs/api-contract.md`.
+
 ## 3. Comunicación
 
 ```text
@@ -72,6 +89,9 @@ inventory-front
                      ▼
                Business Database
 ```
+
+> En el diagrama anterior, `inventory-service` representa al servicio de
+> inventario activo; puede ser la implementación en Go. Ver ADR-002.
 
 ## 4. Flujo de login
 
@@ -121,7 +141,8 @@ Spring Security
 
 El `auth-service` es propietario de la información de autenticación.
 
-El `inventory-service` es propietario de la información de negocio.
+El servicio de inventario activo (`inventory-service` o `inventory-service-go`)
+es propietario de la información de negocio. Nunca ambos al mismo tiempo.
 
 Conceptualmente:
 

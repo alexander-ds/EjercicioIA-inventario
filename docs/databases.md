@@ -18,6 +18,9 @@ inventory_db
 
 Cada servicio es propietario de su propia base de datos.
 
+La `inventory_db` pertenece al servicio de inventario activo: `inventory-service`
+o `inventory-service-go`. Nunca ambos al mismo tiempo (ver ADR-002).
+
 No se comparten tablas ni se utilizan Foreign Keys entre bases de datos.
 
 ---
@@ -252,7 +255,8 @@ El token debe almacenarse de forma segura.
 
 # 4. Inventory DB
 
-La `inventory_db` pertenece exclusivamente a `inventory-service`.
+La `inventory_db` pertenece exclusivamente al servicio de inventario activo
+(`inventory-service` o `inventory-service-go`, según ADR-002).
 
 Su responsabilidad es gestionar la información de negocio relacionada con inventario.
 

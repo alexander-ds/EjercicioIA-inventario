@@ -6,6 +6,7 @@ Este repositorio contiene una aplicación distribuida compuesta por:
 
 * `auth-service/`: microservicio de autenticación desarrollado en Node.js.
 * `inventory-service/`: API principal desarrollada en Spring Boot.
+* `inventory-service-go/`: implementación alternativa en Go de la API de inventario. Se usa en lugar de `inventory-service`, nunca ambos activos a la vez (ADR-002).
 * `inventory-front/`: aplicación web desarrollada en React.
 * `docs/`: documentación arquitectónica, contratos, decisiones y estándares del proyecto.
 
@@ -48,6 +49,9 @@ Este repositorio contiene una aplicación distribuida compuesta por:
                          └──────────────────┘
 ```
 
+> `inventory-service-go/` es alternativa a `inventory-service`: el servicio de
+> inventario activo es el propietario de `inventory_db`. Ver ADR-002.
+
 ## 3. Responsabilidades
 
 ### Auth Service
@@ -77,6 +81,19 @@ Responsable de:
 * Roles y permisos cuando se implementen.
 
 No debe duplicar el login del `auth-service`.
+
+### inventory-service-go
+
+Responsable de lo mismo que `inventory-service`, pero implementado en Go:
+
+* APIs REST.
+* Lógica de negocio.
+* Persistencia de negocio en `inventory_db`.
+* Validación del JWT emitido por `auth-service`.
+* Autorización.
+
+No debe duplicar el login del `auth-service`.
+No debe estar activo al mismo tiempo que `inventory-service` (ADR-002).
 
 ### inventory-front
 
@@ -115,7 +132,9 @@ No duplicar responsabilidades.
 
 ¿Es negocio o autorización?
         ↓
- inventory-service
+ inventory-service / inventory-service-go
+        ↓
+   solo uno activo (ADR-002)
 
 ¿Es presentación?
         ↓
